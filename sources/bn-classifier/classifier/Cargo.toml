@@ -1,0 +1,20 @@
+[package]
+name = "bn-classifier"
+version = "0.1.0"
+description = "Tool for classifying Boolean models by dynamic properties."
+authors = ["Ondřej Huvar <xhuvar@fi.muni.cz>", "Samuel Pastva <sam.pastva@gmail.com>"]
+license = "MIT"
+edition = "2021"
+rust-version = "1.72"
+
+[dependencies]
+biodivine-lib-bdd = "=0.5.2"
+biodivine-lib-param-bn = "=0.4.7"
+biodivine-hctl-model-checker = "=0.2.0"
+clap = { version = "4.1.4", features = ["derive"] }
+zip = "0.6.3"
+
+# Include Z3 dependencies as strictly as possible, we don't want
+# this to change because it might break our release builds.
+#z3="^0.11.2"
+#z3-sys = "^0.7.1"

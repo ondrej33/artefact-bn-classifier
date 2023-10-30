@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <title>HCTL tree explorer</title>
+        <meta charset="utf-8">
+        <link rel="stylesheet" href="style.css" type="text/css">        
+
+        <script src="script/dependencies/dagre.js"></script>        
+        <script src="script/dependencies/cytoscape.min.js"></script>        
+        <script src="script/dependencies/cytoscape-dagre.js"></script>
+        <script src="script/dependencies/lodash.js"></script>
+        <script src="script/dependencies/hotkeys.min.js"></script>        
+
+        <script src="script/ComputeEngine.js"></script>                
+        <script src="script/CytoscapeTreeEditor.js"></script>                
+        <script src="script/treeExplorerMain.js"></script>        
+    </head>
+
+    <body onload="init()" id="tree-explorer" style="overflow: hidden;">
+
+        <div id="cytoscape-editor">
+        </div>
+
+        <div id="quick-help" style="top: 50%;">
+            <h3 style="display: block; margin: 0 auto; float: right;">HELP</h3>
+            <b>Tree editor navigation:</b>
+            <ul>
+                <li>(↑) Select parent node.</li>
+                <li>(↓) Select positive child.</li>
+                <li>(Shift + ↓) Select negative child.</li>
+                <li>(←/→) Switch positive/negative branch.</li>                
+            </ul>
+            <b>Tree actions:</b>
+            <ul>
+                <li>(⌫) Remove selected node.</li>
+                <li>(D) Compute decision attributes for the selected node.</li> 
+                <li>(H) Toggle this help message.</li>
+            </ul>
+            <b>Units:</b>
+            <ul>
+                <li>Witness count: Number of fully instantiated networks.</li>
+                <li>(%): Percentage of networks in the node, i.e. count/total*100.</li>
+                <li>(٪): Log-percentage of networks, i.e. log(count)/log(total)*100.</li>
+            </ul>     
+
+            <div style="width: 100%; text-align: center; font-size: 12px;">(this message disappears when you select some element)</div>
+        </div>
+
+        <h1 id='logo'>HCTL Property Explorer</span></h1>
+    
+        <div id="decision-info" class="main-panel fira-mono gone">
+            <div class="center" style="margin: 16px;">
+                <span style="position: relative; top: -20px; font-size: 14px;">Decision</span><br>
+                <span id="decision-attribute" style="font-size: 20px;">Lorem_Ipsum</span>
+            </div>
+
+            <span id="decision-phenotype-label" style="font-weight: bold; margin-top: 16px; display: inline-block; margin-bottom: 8px;">Outcomes (X):</span>
+
+            <table class="gone">
+                <tr id="behavior-table-row-template" class="gone">
+                    <td class="cell-behavior">S O</td>
+                    <td class="cell-witness-count">1234</td>
+                    <td class="cell-distribution">24% / 14٪</td>
+                </tr>
+            </table>
+
+            <table id="decision-behavior-table" class="behavior-table">
+                <tr class="behavior-table-header">
+                    <td class="cell-behavior">Behavior</td>
+                    <td class="cell-witness-count">Witness Count</td>
+                    <td class="cell-distribution">Distribution</td>
+                </tr>             
+            </table>
+
+            <div class="universal-props-container valid gone">
+                <span class="panel-sub-header">Universally valid properties:</span>
+                <ul class="universal-valid-props" style="margin-top: 0;"></ul>
+            </div>
+
+            <div class="universal-props-container invalid gone">
+                <span class="panel-sub-header">Universally invalid properties:</span>
+                <ul class="universal-invalid-props" style="margin-top: 0;"></ul>
+            </div>
+
+        </div>
+
+        <div id="mixed-info" class="main-panel fira-mono gone">
+            <div class="center" style="margin: 16px;">
+                <span style="position: relative; top: -20px; font-size: 14px;">Mixed</span><br>
+                <span id="mixed-type-label" style="font-size: 20px;">X types</span>
+            </div>
+
+            <table id="mixed-behavior-table" class="behavior-table">                
+                <tr class="behavior-table-header">
+                    <td class="cell-behavior">Behavior</td>
+                    <td class="cell-witness-count">Witness Count</td>
+                    <td class="cell-distribution">Distribution</td>
+                </tr>
+            </table>
+
+            <div class="universal-props-container valid gone">
+                <span class="panel-sub-header">Universally valid properties:</span>
+                <ul class="universal-valid-props" style="margin-top: 0;"></ul>
+            </div>
+
+            <div class="universal-props-container invalid gone">
+                <span class="panel-sub-header">Universally invalid properties:</span>
+                <ul class="universal-invalid-props" style="margin-top: 0;"></ul>
+            </div>
+
+            <div id="mixed-attributes-list-item-template" class="attribute-panel gone">                
+                <div style="float: left;" class="information-gain">0.43 ɪɢ / 4 ᴛᴄ</div>
+                <div style="float: right;" class="attribute-name">ATTr_Name</div>
+                <div style="clear: both;"></div>
+                <div class="attribute-sub-panel negative">
+                    <span class="title">Negative</span>
+                    <table class="table collapsed">
+                        <tr>
+                            <td class="distribution">99%</td>
+                            <td class="phenotype">SSSSSSSSSSSSSSSSSD</td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="attribute-sub-panel positive">
+                    <span class="title">Positive</span>
+                    <table class="table collapsed">
+                        <tr>                        
+                            <td class="phenotype">SSSSSSSSSSSSSSSSSD</td>
+                            <td class="distribution">99%</td>                            
+                        </tr>
+                    </table>
+                </div>                
+                <div style="clear: both;"></div>
+                <div class="expand-button">more...</div>
+            </div>        
+
+            <span class="panel-sub-header">Automatic tree expansion:</span>      
+            <div id="auto-expand" style="clear: both; text-align: center; padding-right: 16px;">
+                <button id="button-auto-expand" class="image-button" style="margin-bottom: 16px; margin-right: 16px; margin-top: 8px;">Auto expand (1 level) <img src="img/graph-24px.svg"></button>
+                Depth: <input type="range" min="1" max="10" value="1" class="seekbar" id="auto-expand-slider" style="width: 100px; position: relative; top: 8px;">                
+            </div>  
+
+            <span class="panel-sub-header">Manual tree expansion:</span>      
+            <div style="clear: both; text-align: center;">
+                <button id="button-add-variable" class="image-button" style="margin-bottom: 16px; margin-right: 16px; margin-top: 8px;">Make decision (D) <img src="img/add_box-24px.svg"></button>
+            </div>
+
+            <div id="mixed-attributes" class="gone">
+                <div style="text-align: center;">
+                    <span id="mixed-attributes-title" style="font-weight: bold; margin-top: 16px; display: inline-block; margin-bottom: 8px;">Attributes:</span>
+                </div>
+
+                <div>
+                    <b>Sort by:</b>
+                    <label class="sort-checkbox"><input type="checkbox" name="sort-information-gain" id="sort-information-gain" checked>Information gain</label> | 
+                    <label class="sort-checkbox"><input type="checkbox" name="sort-total-classes" id="sort-total-classes">Total classes</label> | 
+                    <label class="sort-checkbox"><input type="checkbox" name="sort-positive" id="sort-positive">Positive</label> | 
+                    <label class="sort-checkbox"><input type="checkbox" name="sort-positive-majority" id="sort-positive-majority">Positive majority</label> | 
+                    <label class="sort-checkbox"><input type="checkbox" name="sort-negative" id="sort-negative">Negative</label> | 
+                    <label class="sort-checkbox"><input type="checkbox" name="sort-negative-majority" id="sort-negative-majority">Negative majority</label> | 
+                    <label class="sort-checkbox"><input type="checkbox" name="sort-alphabetical" id="sort-alphabetical">Alphabetical</label>
+                </div>
+
+                <div id="mixed-attributes-list">
+
+                </div>                                
+
+                <span style="font-size: 14px; display: block; width: 100%; text-align: right;">٪ = log-percentage</span>
+                <span style="font-size: 14px; display: block; width: 100%; text-align: right;">ɪɢ = information gain</span>
+                <span style="font-size: 14px; display: block; width: 100%; text-align: right;">ᴛᴄ = total class count</span>
+            </div>           
+        </div>
+
+        <div id="leaf-info" class="main-panel fira-mono gone">
+            <div class="center" style="margin: 16px;">
+                <span style="position: relative; top: -20px; font-size: 14px;">Outcome</span><br>
+                <span id="leaf-phenotype" style="font-size: 26px;">DDS</span>
+            </div>            
+            <div>
+                <span style="float: left;">Witness count: <span id="leaf-witness-count">12345</span></span>                
+            </div>
+
+            <table id="leaf-behavior-table" class="behavior-table gone" style="margin-top: 16px;">
+                <tr class="behavior-table-header">
+                    <td class="cell-behavior">Behavior</td>
+                    <td class="cell-witness-count">Witness Count</td>
+                    <td class="cell-distribution">Distribution</td>
+                </tr>
+            </table>
+            <br>
+
+            <span class="panel-sub-header">Necessary conditions:</span>
+            <ul id="leaf-necessary-conditions" style="margin-top: 0;">Lorem Ipsum</ul>
+
+            <div id="leaf-full-properties-parent">
+                <span class="panel-sub-header">Satisfied properties:</span>
+                <ul id="leaf-full-properties" style="margin-top: 0;">Lorem Ipsum</ul>
+            </div>
+
+            <span class="panel-sub-header">Witness networks:</span>
+            <div>
+                <div style="width: 100%; text-align: center;">
+                    <label class="invisible-input">
+                        <span style="display: inline-block; text-align: center; padding: 4px;">Witness<br>count</span>
+                        <input id="witness-count" type="number" value="1" min="1" onfocusout="checkIfWitnessNumValid(this);" style="width: 64px; font-size: 20px; text-align: center; vertical-align: super;"/>
+                    </label>
+                    <label class="invisible-input" style="vertical-align: super; margin-left: 8px; margin-right: 8px;">
+                        Randomize
+                        <input id="witness-is-random" type="checkbox" style="transform: scale(1.5);" onclick="document.getElementById('witness-seed-container').classList.toggle('gone')">
+                    </label>
+                    <label id="witness-seed-container" class="invisible-input gone">
+                        <span style="display: inline-block; text-align: center; padding: 4px;">Random<br>seed</span>
+                        <input id="witness-seed" type="number" value="0" min="0" style="width: 96px; font-size: 20px; text-align: center; vertical-align: super;"/>
+                    </label>
+                    <br>
+                    <button id="button-download-witnesses" class="image-button" style="margin-bottom: 8px; margin-right: 16px; margin-top: 8px;" onclick="downloadTreeWitnesses()">Generate network(s) <img src="img/file_copy-48px.svg"></button>
+                </div>
+            </div>
+
+        </div>    
+
+        <div id="transparency-switch" class="grey gone">
+            <span id="mass-distribution-label" style="display: table-cell; height: 22px; vertical-align: middle; padding-right: 8px;">Show mass distribution</span>
+            <label class="switch" style="display: table-cell;">
+              <input id="mass-distribution" type="checkbox">
+              <span class="slider round"></span>
+            </label>
+        </div>
+
+        <div id="precision">
+            <input type="range" min="5001" max="10000" value="10000" class="seekbar" id="precision-slider">
+            Precision: <span id="precision-value">100%</span>
+        </div>
+
+        <div id="tree-export" class="gone">
+            <button id="button-export-tree" class="image-button" style="margin-bottom: 8px; margin-right: 16px; margin-top: 8px;" onclick="exportTree()">
+                Export decision tree
+                <img src="img/file_copy-48px.svg">
+            </button>
+        </div>
+
+        <div id="loading-indicator" class="invisible"><img src="img/progress.gif"/><br><br>Waiting for server...</div>
+    </body>
+</html>

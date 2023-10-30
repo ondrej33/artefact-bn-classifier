@@ -1,0 +1,1 @@
+Set of Boolean models used by authors of [this paper](https://doi.org/10.1093/bioinformatics/btab825) about the BN analysis library pystablemotifs.

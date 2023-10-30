@@ -1,0 +1,33 @@
+[package]
+name = "biodivine-hctl-model-checker"
+version = "0.2.0"
+authors = ["Ondřej Huvar <xhuvar@fi.muni.cz>", "Samuel Pastva <sam.pastva@gmail.com>"]
+edition = "2021"
+description = "Library for symbolic HCTL model checking on partially defined Boolean networks."
+documentation = "https://docs.rs/biodivine-hctl-model-checker/latest/"
+homepage = "https://github.com/sybila/biodivine-hctl-model-checker"
+repository = "https://github.com/sybila/biodivine-hctl-model-checker"
+readme = "README.md"
+keywords = ["hctl", "model-checking", "boolean-network", "symbolic", "systems-biology"]
+categories = ["science", "simulation"]
+license = "MIT"
+exclude = ["benchmark_models", ".github", ".githooks"]
+rust-version = "1.72"
+
+[profile.test]
+opt-level = 3 # to be able to run non-trivial tests
+
+[[bin]]
+name = "hctl-model-checker"
+path = "src/main.rs"
+
+[[bin]]
+name = "convert-aeon-to-bnet"
+path = "src/bin/convert_aeon_to_bnet.rs"
+
+[dependencies]
+biodivine-lib-bdd = ">=0.5.1, <1.0.0"
+biodivine-lib-param-bn = ">=0.4.5, <1.0.0"
+clap = { version = "4.1.4", features = ["derive"] }
+rand = "0.8.5"
+termcolor = "1.1.2"
